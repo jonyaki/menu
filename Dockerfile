@@ -1,20 +1,8 @@
-FROM adoptopenjdk:17-jdk-hotspot
+FROM maven:3.8.5-openjdk-17 as build
+COPY ..
+RUN mvn clean install -DskipTests
 
-# Establece el directorio de trabajo en /app
-WORKDIR /app
-
-# Copia el archivo pom.xml y verifica las dependencias
-COPY pom.xml .
-RUN mvn -B dependency:resolve dependency:resolve-plugins
-
-# Copia los archivos del proyecto (excluyendo los que estén en el .dockerignore)
-COPY src ./src
-
-# Compila la aplicación
-RUN mvn clean package
-
-# Expone el puerto 8080 (o el puerto que esté configurado en tu aplicación Spring Boot)
+FROM openjdk:17.0.1-jdk-slim
+COPY --from=build /target/myMenu*.jar myMenu.jar
 EXPOSE 8080
-
-# Comando para ejecutar la aplicación al iniciar el contenedor
-CMD ["java", "-jar", "target/myMenu*.jar"]
+ENTRYPOINT ["java", "-jar", "myMenu.jar"]
